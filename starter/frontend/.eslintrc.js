@@ -41,4 +41,3 @@ module.exports = {
     'react/jsx-uses-vars': 'warn',
   },
 };
-
