@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.10-bookworm-slim
 
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install system dependencies required to build Python packages
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
@@ -22,13 +22,13 @@ RUN pip install --no-cache-dir pipenv
 # Copy dependency files first
 COPY Pipfile Pipfile.lock ./
 
-# Install dependencies from Pipfile.lock
+# Install Python dependencies
 RUN pipenv install --system --deploy
 
-# Copy backend application
+# Copy application source code
 COPY . .
 
-# Create application user
+# Create non-root user
 RUN useradd --create-home --uid 1000 app \
     && chown -R app:app /app
 
