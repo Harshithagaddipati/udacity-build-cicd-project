@@ -1,12 +1,6 @@
 name: Backend CI
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - "starter/backend/**"
-
   pull_request:
     branches:
       - master
@@ -16,6 +10,34 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    name: Backend Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Pipenv
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+
+      - name: Install dependencies
+        working-directory: starter/backend
+        run: |
+          pipenv install --dev
+
+      - name: Run lint
+        working-directory: starter/backend
+        run: |
+          pipenv run flake8 .
+
   test:
     name: Backend Test
     runs-on: ubuntu-latest
@@ -29,72 +51,17 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
-        working-directory: starter/backend
+      - name: Install Pipenv
         run: |
           python -m pip install --upgrade pip
           pip install pipenv
+
+      - name: Install dependencies
+        working-directory: starter/backend
+        run: |
           pipenv install --dev
 
       - name: Run tests
         working-directory: starter/backend
         run: |
           pipenv run pytest
-
-  build-and-push:
-    name: Build and Push Docker Image
-    runs-on: ubuntu-latest
-
-    needs:
-      - test
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # Configure AWS
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      # Login to Amazon ECR
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      # Build Docker image
-      - name: Build Docker image
-        working-directory: starter/backend
-        run: |
-          docker build \
-            --tag project:backend-${{ github.sha }} \
-            .
-
-      # Tag image for ECR
-      - name: Tag Docker image
-        run: |
-          docker tag \
-            project:backend-${{ github.sha }} \
-            720915213019.dkr.ecr.us-east-1.amazonaws.com/project:backend-${{ github.sha }}
-
-      # Push SHA-tagged image
-      - name: Push Docker image to ECR
-        run: |
-          docker push \
-            720915213019.dkr.ecr.us-east-1.amazonaws.com/project:backend-${{ github.sha }}
-
-      # Tag latest
-      - name: Tag latest image
-        run: |
-          docker tag \
-            project:backend-${{ github.sha }} \
-            720915213019.dkr.ecr.us-east-1.amazonaws.com/project:backend-latest
-
-      # Push latest image
-      - name: Push latest image to ECR
-        run: |
-          docker push \
-            720915213019.dkr.ecr.us-east-1.amazonaws.com/project:backend-latest
