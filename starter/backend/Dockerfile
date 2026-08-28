@@ -1,4 +1,4 @@
-FROM python:3.10-bookworm-slim
+FROM python:3.10-slim-bullseye
 
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -12,6 +12,8 @@ RUN apt-get update && \
     gcc \
     libffi-dev \
     libssl-dev \
+    libpcre3 \
+    libpcre3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir --upgrade pip pipenv
