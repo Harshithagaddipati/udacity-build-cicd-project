@@ -7,46 +7,33 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install system dependencies required to build Python packages
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        build-essential \
-        gcc \
-        libpcre3 \
-        libpcre3-dev \
-        libffi-dev \
-        openssl \
-        && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    libpcre3 \
+    libpcre3-dev \
+    libffi-dev \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install pipenv
-RUN pip install --no-cache-dir --upgrade pip pipenv
+# Install Pipenv
+RUN pip install --no-cache-dir pipenv
 
-# Copy dependency files first for Docker layer caching
+# Copy dependency files first
 COPY Pipfile Pipfile.lock ./
 
-# Install Python dependencies
+# Install dependencies from Pipfile.lock
 RUN pipenv install --system --deploy
 
-# Copy application source code
+# Copy backend application
 COPY . .
 
 # Create application user
-RUN useradd --create-home --uid 1000 appuser && \
-    chown -R appuser:appuser /app
+RUN useradd --create-home --uid 1000 app \
+    && chown -R app:app /app
 
-USER appuser
+USER app
 
 EXPOSE 5000
 
-# Start backend using uWSGI
-CMD [
-    "uwsgi",
-    "--http",
-    ":5000",
-    "--master",
-    "--enable-threads",
-    "-s",
-    "/tmp/app.sock",
-    "--manage-script-name",
-    "--mount",
-    "/=app:app"
-]
+CMD ["uwsgi", "--http", ":5000", "--master", "--enable-threads", "-s", "/tmp/app.sock", "--manage-script-name", "--mount", "/=app:app"]
