@@ -91,3 +91,8 @@ jobs:
         run: |
           docker push \
             720915213019.dkr.ecr.us-east-1.amazonaws.com/project:backend-latest
+
+
+
+
+            
