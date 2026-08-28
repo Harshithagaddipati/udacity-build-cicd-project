@@ -1,6 +1,12 @@
 name: Backend CI
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - "starter/backend/**"
+
   pull_request:
     branches:
       - master
@@ -46,7 +52,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # AWS credentials
+      # Configure AWS
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -54,7 +60,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # Login to ECR
+      # Login to Amazon ECR
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -67,32 +73,28 @@ jobs:
             --tag project:backend-${{ github.sha }} \
             .
 
-      # Tag Docker image for ECR
+      # Tag image for ECR
       - name: Tag Docker image
         run: |
           docker tag \
             project:backend-${{ github.sha }} \
             720915213019.dkr.ecr.us-east-1.amazonaws.com/project:backend-${{ github.sha }}
 
-      # Push Docker image to ECR
+      # Push SHA-tagged image
       - name: Push Docker image to ECR
         run: |
           docker push \
             720915213019.dkr.ecr.us-east-1.amazonaws.com/project:backend-${{ github.sha }}
 
-      # Also push latest
+      # Tag latest
       - name: Tag latest image
         run: |
           docker tag \
             project:backend-${{ github.sha }} \
             720915213019.dkr.ecr.us-east-1.amazonaws.com/project:backend-latest
 
+      # Push latest image
       - name: Push latest image to ECR
         run: |
           docker push \
             720915213019.dkr.ecr.us-east-1.amazonaws.com/project:backend-latest
-
-
-
-
-            
