@@ -14,7 +14,7 @@ RUN apt-get update && \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir pipenv
+RUN pip install --no-cache-dir --upgrade pip pipenv
 
 COPY Pipfile Pipfile.lock ./
 
